@@ -133,9 +133,47 @@ func (t *Table) AddSeparator() {
 
 // AddRow adds the supplied items as cells in one row of the table.
 func (t *Table) AddRow(items ...interface{}) *Row {
-	row := CreateRow(items)
-	t.elements = append(t.elements, row)
-	return row
+	splitItems := [][]interface{}{}
+	maxlines := 0
+	for _, v := range items {
+		if str, ok := v.(string); ok {
+			s := strings.Split(str, "\n")
+			item := []interface{}{}
+			for _, v := range s {
+				item = append(item, v)
+			}
+			splitItems = append(splitItems, item)
+			if len(s) > maxlines {
+				maxlines = len(s)
+			}
+		} else {
+			splitItems = append(splitItems, []interface{}{v})
+		}
+	}
+	pad := make([]interface{}, maxlines)
+	for i := 0; i < maxlines; i++ {
+		pad[i] = ""
+	}
+
+	for i := 0; i < len(splitItems); i++ {
+		if len(splitItems[i]) < maxlines {
+			splitItems[i] = append(splitItems[i], pad[0:maxlines-len(splitItems[i])]...)
+		}
+	}
+
+	for i := 0; i < maxlines; i++ {
+		item := make([]interface{}, len(items))
+		for j := 0; j < len(items); j++ {
+			item[j] = splitItems[j][i]
+		}
+
+		row := CreateRow(item)
+		t.elements = append(t.elements, row)
+	}
+
+	// row := CreateRow(items)
+	// t.elements = append(t.elements, row)
+	return nil
 }
 
 // AddTitle supplies a table title, which if present will be rendered as
